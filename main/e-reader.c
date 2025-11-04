@@ -16,6 +16,7 @@ void app_main(void)
     if (result != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to initiialize SPIFFS(%s)", esp_err_to_name(result));
+        return;
     }
 
     size_t total = 0, used = 0;
@@ -23,6 +24,7 @@ void app_main(void)
     if (result != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to to get partition (%s)", esp_err_to_name(result));
+        return;
     }
     else
     {

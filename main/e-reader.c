@@ -4,12 +4,42 @@
 #include "nvs_flash.h"
 #include "esp_netif.h"
 #include "esp_event.h"
-
+#include "esp_http_server.h"
 #include "protocol_examples_common.h"
 #include "esp_wifi.h"
 
 #define wifiTAG "simple_connect_example"
 static const char *TAG = "FileSystem";
+
+static esp_err_t hello_get_handler(httpd_req_t *req)
+{
+    const char resp[] = "Hello from ESP32!";
+    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+static const httpd_uri_t hello = {
+    .uri = "/",
+    .method = HTTP_GET,
+    .handler = hello_get_handler,
+};
+
+void start_webserver(void)
+{
+    httpd_handle_t server = NULL;
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.server_port = 80;
+
+    if (httpd_start(&server, &config) == ESP_OK)
+    {
+        httpd_register_uri_handler(server, &hello);
+        ESP_LOGI("webserver", "Server started on port %d", config.server_port);
+    }
+    else
+    {
+        ESP_LOGE("webserver", "Failed to start server");
+    }
+}
 
 void app_main(void)
 {
@@ -70,10 +100,5 @@ void app_main(void)
         ESP_LOGI(TAG, "Partition size: total: %d, used: %d", total, used);
     }
 
-    FILE *book = fopen("/storage/frankenstein.txt", "r");
-
-    char line[64];
-    fgets(line, sizeof(line), book);
-    fclose(book);
-    printf("%s\n", line);
+    start_webserver();
 }

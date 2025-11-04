@@ -11,17 +11,27 @@
 #define wifiTAG "simple_connect_example"
 static const char *TAG = "FileSystem";
 
-static esp_err_t hello_get_handler(httpd_req_t *req)
+static esp_err_t homepage_handler(httpd_req_t *req)
 {
-    const char resp[] = "Hello from ESP32!";
+    const char resp[] =
+        "<!DOCTYPE html>"
+        "<html><head><title>Upload Book!</title></head>"
+        "<body>"
+        "<h2>Upload a Book</h2>"
+        "<form action=\"/upload\" method=\"POST\" enctype=\"multipart/form-data\">"
+        "<input type=\"file\" name=\"book\"><br><br>"
+        "<input type=\"submit\" value=\"Upload\">"
+        "</form>"
+        "</body></html>";
+
     httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
 }
 
-static const httpd_uri_t hello = {
+static const httpd_uri_t homepage = {
     .uri = "/",
     .method = HTTP_GET,
-    .handler = hello_get_handler,
+    .handler = homepage_handler,
 };
 
 void start_webserver(void)
@@ -32,7 +42,7 @@ void start_webserver(void)
 
     if (httpd_start(&server, &config) == ESP_OK)
     {
-        httpd_register_uri_handler(server, &hello);
+        httpd_register_uri_handler(server, &homepage);
         ESP_LOGI("webserver", "Server started on port %d", config.server_port);
     }
     else
@@ -49,7 +59,7 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     ESP_ERROR_CHECK(example_connect());
-    
+
     // mount file system
     esp_vfs_spiffs_conf_t config = {
         .base_path = "/storage",

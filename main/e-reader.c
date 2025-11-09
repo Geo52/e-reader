@@ -17,7 +17,7 @@ static esp_err_t homepage_handler(httpd_req_t *req)
         "<!DOCTYPE html>"
         "<html><head><title>Upload Book!</title></head>"
         "<body>"
-        "<h2>Upload a Book</h2>"
+        "<h2>Upload a Book!</h2>"
         "<form action=\"/upload\" method=\"POST\" enctype=\"multipart/form-data\">"
         "<input type=\"file\" name=\"book\"><br><br>"
         "<input type=\"submit\" value=\"Upload\">"
@@ -33,6 +33,34 @@ static const httpd_uri_t homepage = {
     .method = HTTP_GET,
     .handler = homepage_handler,
 };
+
+void mount_filesystem()
+{
+    esp_vfs_spiffs_conf_t config = {
+        .base_path = "/storage",
+        .partition_label = NULL,
+        .max_files = 5,
+        .format_if_mount_failed = true};
+
+    esp_err_t result = esp_vfs_spiffs_register(&config);
+    if (result != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to initiialize SPIFFS(%s)", esp_err_to_name(result));
+        return;
+    }
+
+    size_t total = 0, used = 0;
+    result = esp_spiffs_info(config.partition_label, &total, &used);
+    if (result != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to to get partition (%s)", esp_err_to_name(result));
+        return;
+    }
+    else
+    {
+        ESP_LOGI(TAG, "Partition size: total: %d, used: %d", total, used);
+    }
+}
 
 void start_webserver(void)
 {
@@ -60,31 +88,7 @@ void app_main(void)
 
     ESP_ERROR_CHECK(example_connect());
 
-    // mount file system
-    esp_vfs_spiffs_conf_t config = {
-        .base_path = "/storage",
-        .partition_label = NULL,
-        .max_files = 5,
-        .format_if_mount_failed = true};
-
-    esp_err_t result = esp_vfs_spiffs_register(&config);
-    if (result != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to initiialize SPIFFS(%s)", esp_err_to_name(result));
-        return;
-    }
-
-    size_t total = 0, used = 0;
-    result = esp_spiffs_info(config.partition_label, &total, &used);
-    if (result != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to to get partition (%s)", esp_err_to_name(result));
-        return;
-    }
-    else
-    {
-        ESP_LOGI(TAG, "Partition size: total: %d, used: %d", total, used);
-    }
+    mount_filesystem();
 
     start_webserver();
 }

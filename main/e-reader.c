@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <sys/param.h>
+#include <sys/unistd.h>
 #include "esp_spiffs.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
@@ -10,7 +12,6 @@
 
 #define wifiTAG "simple_connect_example"
 static const char *TAG = "FileSystem";
-
 
 static esp_err_t homepage_handler(httpd_req_t *req)
 {
@@ -28,6 +29,47 @@ static const httpd_uri_t homepage = {
     .method = HTTP_GET,
     .handler = homepage_handler,
 };
+
+static esp_err_t upload_book_handler(httpd_req_t *req)
+{
+    FILE *fd = fopen("/storage/book.txt", "w");
+    char buf[800];
+    int remaining = req->content_len;
+    int received;
+
+    while (remaining > 0)
+    {
+        ESP_LOGI(TAG, "Remaining size: %d", remaining);
+        received = httpd_req_recv(req, buf, MIN(remaining, sizeof(buf)));
+        fwrite(buf, 1, received, fd);
+        remaining -= received;
+    }
+    fclose(fd);
+    ESP_LOGI(TAG, "File reception complete");
+    httpd_resp_sendstr(req, "book uploaded succcessfully");
+    return ESP_OK;
+}
+
+static const httpd_uri_t upload_book = {
+    .uri = "/upload-book",
+    .method = HTTP_POST,
+    .handler = upload_book_handler};
+
+static esp_err_t delete_book_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "deleting file");
+    unlink("/storage/book.txt");
+    httpd_resp_set_status(req, "303 See Other");
+    httpd_resp_set_hdr(req, "Location", "/");
+    httpd_resp_sendstr(req, "File deleted successfully");
+    return ESP_OK;
+    
+}
+
+static const httpd_uri_t delete_book = {
+    .uri = "/delete-book",
+    .method = HTTP_POST,
+    .handler = delete_book_handler};
 
 void mount_filesystem()
 {
@@ -66,7 +108,8 @@ void start_webserver(void)
     if (httpd_start(&server, &config) == ESP_OK)
     {
         httpd_register_uri_handler(server, &homepage);
-        // httpd_register_uri_handler(server, &upload_book);
+        httpd_register_uri_handler(server, &upload_book);
+        httpd_register_uri_handler(server, &delete_book);
         ESP_LOGI("webserver", "Server started on port %d", config.server_port);
     }
     else

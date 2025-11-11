@@ -11,20 +11,15 @@
 #define wifiTAG "simple_connect_example"
 static const char *TAG = "FileSystem";
 
+extern const unsigned char homepage_html_start[] asm("_binary_homepage_html_start");
+extern const unsigned char homepage_html_end[] asm("_binary_homepage_html_end");
+
 static esp_err_t homepage_handler(httpd_req_t *req)
 {
-    const char resp[] =
-        "<!DOCTYPE html>"
-        "<html><head><title>Upload Book!</title></head>"
-        "<body>"
-        "<h2>Upload a Book!</h2>"
-        "<form action=\"/upload\" method=\"POST\" enctype=\"multipart/form-data\">"
-        "<input type=\"file\" name=\"book\"><br><br>"
-        "<input type=\"submit\" value=\"Upload\">"
-        "</form>"
-        "</body></html>";
+    size_t homepage_html_size = (homepage_html_end - homepage_html_start);
 
-    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, (const char *)homepage_html_start, homepage_html_size);
     return ESP_OK;
 }
 
@@ -71,6 +66,7 @@ void start_webserver(void)
     if (httpd_start(&server, &config) == ESP_OK)
     {
         httpd_register_uri_handler(server, &homepage);
+        // httpd_register_uri_handler(server, &upload_book);
         ESP_LOGI("webserver", "Server started on port %d", config.server_port);
     }
     else

@@ -11,11 +11,11 @@
 #define wifiTAG "simple_connect_example"
 static const char *TAG = "FileSystem";
 
-extern const unsigned char homepage_html_start[] asm("_binary_homepage_html_start");
-extern const unsigned char homepage_html_end[] asm("_binary_homepage_html_end");
 
 static esp_err_t homepage_handler(httpd_req_t *req)
 {
+    extern const unsigned char homepage_html_start[] asm("_binary_homepage_html_start");
+    extern const unsigned char homepage_html_end[] asm("_binary_homepage_html_end");
     size_t homepage_html_size = (homepage_html_end - homepage_html_start);
 
     httpd_resp_set_type(req, "text/html");

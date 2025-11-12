@@ -10,7 +10,6 @@
 #include "protocol_examples_common.h"
 #include "esp_wifi.h"
 
-#define wifiTAG "simple_connect_example"
 static const char *TAG = "FileSystem";
 
 void mount_filesystem()
@@ -55,18 +54,19 @@ static esp_err_t homepage_handler(httpd_req_t *req)
 static esp_err_t upload_book_handler(httpd_req_t *req)
 {
     FILE *fd = fopen("/storage/book.txt", "w");
-    char buf[800];
+    char *buf = malloc(4096);
     int remaining = req->content_len;
     int received;
 
     while (remaining > 0)
     {
         ESP_LOGI(TAG, "Remaining size: %d", remaining);
-        received = httpd_req_recv(req, buf, MIN(remaining, sizeof(buf)));
+        received = httpd_req_recv(req, buf, MIN(remaining, 4096));
         fwrite(buf, 1, received, fd);
         remaining -= received;
     }
     fclose(fd);
+    free(buf);
     ESP_LOGI(TAG, "File reception complete");
     httpd_resp_sendstr(req, "book uploaded succcessfully");
     return ESP_OK;

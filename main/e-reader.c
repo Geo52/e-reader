@@ -13,64 +13,6 @@
 #define wifiTAG "simple_connect_example"
 static const char *TAG = "FileSystem";
 
-static esp_err_t homepage_handler(httpd_req_t *req)
-{
-    extern const unsigned char homepage_html_start[] asm("_binary_homepage_html_start");
-    extern const unsigned char homepage_html_end[] asm("_binary_homepage_html_end");
-    size_t homepage_html_size = (homepage_html_end - homepage_html_start);
-
-    httpd_resp_set_type(req, "text/html");
-    httpd_resp_send(req, (const char *)homepage_html_start, homepage_html_size);
-    return ESP_OK;
-}
-
-static const httpd_uri_t homepage = {
-    .uri = "/",
-    .method = HTTP_GET,
-    .handler = homepage_handler,
-};
-
-static esp_err_t upload_book_handler(httpd_req_t *req)
-{
-    FILE *fd = fopen("/storage/book.txt", "w");
-    char buf[800];
-    int remaining = req->content_len;
-    int received;
-
-    while (remaining > 0)
-    {
-        ESP_LOGI(TAG, "Remaining size: %d", remaining);
-        received = httpd_req_recv(req, buf, MIN(remaining, sizeof(buf)));
-        fwrite(buf, 1, received, fd);
-        remaining -= received;
-    }
-    fclose(fd);
-    ESP_LOGI(TAG, "File reception complete");
-    httpd_resp_sendstr(req, "book uploaded succcessfully");
-    return ESP_OK;
-}
-
-static const httpd_uri_t upload_book = {
-    .uri = "/upload-book",
-    .method = HTTP_POST,
-    .handler = upload_book_handler};
-
-static esp_err_t delete_book_handler(httpd_req_t *req)
-{
-    ESP_LOGI(TAG, "deleting file");
-    unlink("/storage/book.txt");
-    httpd_resp_set_status(req, "303 See Other");
-    httpd_resp_set_hdr(req, "Location", "/");
-    httpd_resp_sendstr(req, "File deleted successfully");
-    return ESP_OK;
-    
-}
-
-static const httpd_uri_t delete_book = {
-    .uri = "/delete-book",
-    .method = HTTP_POST,
-    .handler = delete_book_handler};
-
 void mount_filesystem()
 {
     esp_vfs_spiffs_conf_t config = {
@@ -98,6 +40,63 @@ void mount_filesystem()
         ESP_LOGI(TAG, "Partition size: total: %d, used: %d", total, used);
     }
 }
+
+static esp_err_t homepage_handler(httpd_req_t *req)
+{
+    extern const unsigned char homepage_html_start[] asm("_binary_homepage_html_start");
+    extern const unsigned char homepage_html_end[] asm("_binary_homepage_html_end");
+    size_t homepage_html_size = (homepage_html_end - homepage_html_start);
+
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, (const char *)homepage_html_start, homepage_html_size);
+    return ESP_OK;
+}
+
+static esp_err_t upload_book_handler(httpd_req_t *req)
+{
+    FILE *fd = fopen("/storage/book.txt", "w");
+    char buf[800];
+    int remaining = req->content_len;
+    int received;
+
+    while (remaining > 0)
+    {
+        ESP_LOGI(TAG, "Remaining size: %d", remaining);
+        received = httpd_req_recv(req, buf, MIN(remaining, sizeof(buf)));
+        fwrite(buf, 1, received, fd);
+        remaining -= received;
+    }
+    fclose(fd);
+    ESP_LOGI(TAG, "File reception complete");
+    httpd_resp_sendstr(req, "book uploaded succcessfully");
+    return ESP_OK;
+}
+
+static esp_err_t delete_book_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "deleting file");
+    unlink("/storage/book.txt");
+    httpd_resp_set_status(req, "303 See Other");
+    httpd_resp_set_hdr(req, "Location", "/");
+    httpd_resp_sendstr(req, "File deleted successfully");
+    return ESP_OK;
+}
+
+static const httpd_uri_t homepage = {
+    .uri = "/",
+    .method = HTTP_GET,
+    .handler = homepage_handler,
+};
+
+static const httpd_uri_t upload_book = {
+    .uri = "/upload-book",
+    .method = HTTP_POST,
+    .handler = upload_book_handler};
+
+static const httpd_uri_t delete_book = {
+    .uri = "/delete-book",
+    .method = HTTP_POST,
+    .handler = delete_book_handler};
 
 void start_webserver(void)
 {

@@ -5,7 +5,9 @@
 - esp idf
 
 ## setup (so far)
-reference this to install esp idf on your machine:
+reference this to install esp idf on your machine:  
+<mark>If your on a linux/mac you have have to add your user to the : sudo usermod -aG dialout $USER
+</mark>
 - https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html
 
 - https://www.youtube.com/watch?v=J8zc8mMNKtc&t=595s
@@ -17,8 +19,6 @@ reference this to install esp idf on your machine:
 - WIFI: menuconfig->example connection config->specify ssid and password
 - SPIFFS: https://www.youtube.com/watch?v=V9-cgXag4Ko&t=621s (reference the project setup chapter)
 3. flash the code to the esp  
-<mark>if your on a linux/mac you have have to add your user to the dialout in order to use idf: sudo usermod -aG dialout $USER
-</mark>
 > idf.py flash
 4. monitor
 >idf.py monitor

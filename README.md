@@ -5,8 +5,8 @@
 - esp idf
 
 ## setup (so far)
-reference this to install esp idf on your machine:  
-<mark>If your on a linux/mac you have have to add your user to the : sudo usermod -aG dialout $USER
+0. reference this to install esp idf on your machine  
+<mark>*NOTE: If your on a linux/mac you have have to add your user to the : sudo usermod -aG dialout $USER
 </mark>
 - https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html
 
@@ -20,10 +20,9 @@ reference this to install esp idf on your machine:
 - SPIFFS: https://www.youtube.com/watch?v=V9-cgXag4Ko&t=621s (reference the project setup chapter)
 3. flash the code to the esp  
 > idf.py flash
-4. monitor
+4. monitor and look for the ip
 >idf.py monitor
-5. look for the ip
 * should look something like whats below
     * esp_netif_handlers: example_netif_sta ip: 192.168.1.71
-6. enter the ip into browser
-7. use the form to upload your books
+5. enter the ip into browser
+6. use the form to upload your books
